@@ -8,6 +8,7 @@ RUN chown -R gengine:gengine /run/uwsgi
 COPY requirements.txt ./
 COPY optional-requirements.txt ./
 COPY docker-files/* ./
+RUN pip3 install setuptools==45
 RUN cat optional-requirements.txt >> requirements.txt && pip install -r requirements.txt
 COPY . .
 RUN pip install -e . && touch /tmp/nginx.socket

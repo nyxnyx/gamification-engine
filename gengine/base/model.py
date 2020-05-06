@@ -10,19 +10,22 @@ from zope.sqlalchemy.datamanager import mark_changed
 
 import gengine.metadata as meta
 
+
 class ABaseMeta(type):
     def __init__(cls, name, bases, nmspc):
         super(ABaseMeta, cls).__init__(name, bases, nmspc)
 
         # monkey patch __unicode__
         # this is required to give show the SQL error to the user in flask admin if constraints are violated
-        if hasattr(cls,"__unicode__"):
+        if hasattr(cls, "__unicode__"):
             old_unicode = cls.__unicode__
+
             def patched(self):
                 try:
                     return old_unicode(self)
                 except DetachedInstanceError:
                     return "(DetachedInstance)"
+
             cls.__unicode__ = patched
 
     def __getattr__(cls, item):
@@ -48,10 +51,10 @@ class ABase(with_metaclass(ABaseMeta, object)):
             return self.__unicode__()
 
     def __getitem__(self, key):
-        return getattr(self,key)
+        return getattr(self, key)
 
     def __setitem__(self, key, item):
-        return setattr(self,key,item)
+        return setattr(self, key, item)
 
 
 def calc_distance(latlong1, latlong2):
@@ -116,4 +119,3 @@ def update_connection():
     session = meta.DBSession() if callable(meta.DBSession) else meta.DBSession
     mark_changed(session)
     return session
-

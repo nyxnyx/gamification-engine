@@ -9,14 +9,18 @@ from gengine.base.util import Proxy
 
 
 class MySession(Session):
-    """This allow us to use the flask-admin sqla extension, which uses DBSession.commit() rather than transaction.commit()"""
-    def commit(self,*args,**kw):
-        transaction.commit(*args,**kw)
+    """This allow us to use the flask-admin sqla extension, which uses DBSession.commit() rather than
+    transaction.commit() """
+
+    def commit(self, *args, **kw):
+        transaction.commit(*args, **kw)
 
     def rollback(self, *args, **kw):
-        transaction.abort(*args,**kw)
+        transaction.abort(*args, **kw)
 
-DBSession=Proxy()
+
+DBSession = Proxy()
+
 
 def get_sessionmaker(bind=None):
     return sessionmaker(
@@ -24,6 +28,7 @@ def get_sessionmaker(bind=None):
         class_=MySession,
         bind=bind
     )
+
 
 def init_session(override_session=None, replace=False):
     global DBSession
@@ -34,7 +39,9 @@ def init_session(override_session=None, replace=False):
     else:
         DBSession.target = scoped_session(get_sessionmaker())
 
-Base=None
+
+Base = None
+
 
 def init_declarative_base(override_base=None):
     global Base
@@ -51,8 +58,9 @@ def init_declarative_base(override_base=None):
             "pk": "pk_%(table_name)s"
         }
         metadata = MetaData(naming_convention=convention)
-        Base = declarative_base(metadata = metadata)
-        
+        Base = declarative_base(metadata=metadata)
+
+
 def init_db(engine):
     DBSession.configure(bind=engine)
     Base.metadata.bind = engine

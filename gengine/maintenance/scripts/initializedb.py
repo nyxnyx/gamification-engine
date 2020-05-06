@@ -9,7 +9,7 @@ from pyramid.config import Configurator
 from pyramid.paster import (
     get_appsettings,
     setup_logging,
-    )
+)
 from pyramid.scripts.common import parse_vars
 from sqlalchemy import engine_from_config
 from sqlalchemy.sql.expression import and_, select
@@ -35,23 +35,24 @@ def main(argv=sys.argv):
     options = parse_vars(argv[2:])
     setup_logging(config_uri)
     settings = get_appsettings(config_uri, options=options)
-    
-    durl = os.environ.get("DATABASE_URL") #heroku
+
+    durl = os.environ.get("DATABASE_URL")  # heroku
     if durl:
-        settings['sqlalchemy.url']=durl
+        settings['sqlalchemy.url'] = durl
 
     murl = os.environ.get("MEMCACHED_URL")
     if murl:
-        settings['urlcache_url']=murl
+        settings['urlcache_url'] = murl
 
-    initialize(settings,options)
+    initialize(settings, options)
 
-def initialize(settings,options):
+
+def initialize(settings, options):
     engine = engine_from_config(settings, 'sqlalchemy.')
-    
+
     config = Configurator(settings=settings)
     pyramid_dogpile_cache.includeme(config)
-    
+
     from gengine.metadata import (
         init_session,
         init_declarative_base,
@@ -61,13 +62,13 @@ def initialize(settings,options):
     init_session()
     init_declarative_base()
     init_db(engine)
-    
+
     from gengine.metadata import (
         Base,
         DBSession
     )
 
-    if options.get("reset_db",False):
+    if options.get("reset_db", False):
         Base.metadata.drop_all(engine)
         engine.execute("DROP SCHEMA IF EXISTS public CASCADE")
 
@@ -78,8 +79,8 @@ def initialize(settings,options):
     from alembic.runtime.migration import MigrationContext
 
     alembic_cfg = Config(attributes={
-        'engine' : engine,
-        'schema' : 'public'
+        'engine': engine,
+        'schema': 'public'
     })
     script_location = os.path.join(
         os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
@@ -91,7 +92,7 @@ def initialize(settings,options):
     current_rev = context.get_current_revision()
 
     if not current_rev:
-        #init
+        # init
         from gengine.app import model
 
         tables = [t for name, t in model.__dict__.items() if isinstance(t, Table)]
@@ -108,8 +109,8 @@ def initialize(settings,options):
         if admin_user and admin_password:
             create_user(DBSession=DBSession, user=admin_user, password=admin_password)
     else:
-        #upgrade
-        command.upgrade(alembic_cfg,'head')
+        # upgrade
+        command.upgrade(alembic_cfg, 'head')
 
     engine.dispose()
 
@@ -153,8 +154,8 @@ def create_user(DBSession, user, password):
 
             for perm in yield_all_perms():
                 if not exists_by_expr(t_auth_roles_permissions, and_(
-                    t_auth_roles_permissions.c.auth_role_id == auth_role.id,
-                    t_auth_roles_permissions.c.name == perm[0]
+                        t_auth_roles_permissions.c.auth_role_id == auth_role.id,
+                        t_auth_roles_permissions.c.name == perm[0]
                 )):
                     DBSession.add(AuthRolePermission(role=auth_role, name=perm[0]))
 
@@ -164,8 +165,8 @@ def create_user(DBSession, user, password):
 
             DBSession.flush()
 
-def populate_demo(DBSession):
 
+def populate_demo(DBSession):
     from gengine.app.model import (
         Achievement,
         AchievementCategory,
@@ -292,7 +293,6 @@ def populate_demo(DBSession):
                                          )
         DBSession.add(achievement_invite)
 
-
         achievementcategory_sports = AchievementCategory(name="sports")
         DBSession.add(achievementcategory_sports)
 
@@ -326,24 +326,35 @@ def populate_demo(DBSession):
         add_translation(transvar_invite_name, lang_en, 'Invite ${5*level} Users')
         add_translation(transvar_invite_name, lang_de, 'Lade ${5*level} Freunde ein')
 
+        DBSession.add(AchievementAchievementProperty(achievement=achievement_invite, property=property_name,
+                                                     value_translation=transvar_invite_name))
+        DBSession.add(AchievementAchievementProperty(achievement=achievement_invite, property=property_xp,
+                                                     value='${100 * level}'))
+        DBSession.add(AchievementAchievementProperty(achievement=achievement_invite, property=property_icon,
+                                                     value="https://www.gamification-software.com/img/running.png"))
 
-        DBSession.add(AchievementAchievementProperty(achievement=achievement_invite, property=property_name, value_translation=transvar_invite_name))
-        DBSession.add(AchievementAchievementProperty(achievement=achievement_invite, property=property_xp, value='${100 * level}'))
-        DBSession.add(AchievementAchievementProperty(achievement=achievement_invite, property=property_icon, value="https://www.gamification-software.com/img/running.png"))
-
-        DBSession.add(AchievementReward(achievement=achievement_invite, reward=reward_badge, value="https://www.gamification-software.com/img/trophy.png", from_level=5))
-        DBSession.add(AchievementReward(achievement=achievement_invite, reward=reward_image, value="https://www.gamification-software.com/img/video-controller-336657_1920.jpg", from_level=5))
+        DBSession.add(AchievementReward(achievement=achievement_invite, reward=reward_badge,
+                                        value="https://www.gamification-software.com/img/trophy.png", from_level=5))
+        DBSession.add(AchievementReward(achievement=achievement_invite, reward=reward_image,
+                                        value="https://www.gamification-software.com/img/video-controller-336657_1920.jpg",
+                                        from_level=5))
 
         transvar_fittest_name = add_translation_variable(name="fittest_achievement_name")
         add_translation(transvar_fittest_name, lang_en, 'Do the most sport activities among your friends')
         add_translation(transvar_fittest_name, lang_de, 'Mache unter deinen Freunden am meisten Sportaktivitäten')
 
-        DBSession.add(AchievementAchievementProperty(achievement=achievement_fittest, property=property_name, value_translation=transvar_fittest_name))
-        DBSession.add(AchievementAchievementProperty(achievement=achievement_fittest, property=property_xp, value='${50 + (200 * level)}'))
-        DBSession.add(AchievementAchievementProperty(achievement=achievement_fittest, property=property_icon, value="https://www.gamification-software.com/img/colorwheel.png"))
+        DBSession.add(AchievementAchievementProperty(achievement=achievement_fittest, property=property_name,
+                                                     value_translation=transvar_fittest_name))
+        DBSession.add(AchievementAchievementProperty(achievement=achievement_fittest, property=property_xp,
+                                                     value='${50 + (200 * level)}'))
+        DBSession.add(AchievementAchievementProperty(achievement=achievement_fittest, property=property_icon,
+                                                     value="https://www.gamification-software.com/img/colorwheel.png"))
 
-        DBSession.add(AchievementReward(achievement=achievement_fittest, reward=reward_badge, value="https://www.gamification-software.com/img/easel.png", from_level=1))
-        DBSession.add(AchievementReward(achievement=achievement_fittest, reward=reward_image, value="https://www.gamification-software.com/img/game-characters-622654.jpg", from_level=1))
+        DBSession.add(AchievementReward(achievement=achievement_fittest, reward=reward_badge,
+                                        value="https://www.gamification-software.com/img/easel.png", from_level=1))
+        DBSession.add(AchievementReward(achievement=achievement_fittest, reward=reward_image,
+                                        value="https://www.gamification-software.com/img/game-characters-622654.jpg",
+                                        from_level=1))
 
         DBSession.flush()
 
@@ -380,7 +391,8 @@ def populate_demo(DBSession):
             auth_user = DBSession.query(AuthUser).filter_by(email="admin@gamification-software.com").first()
 
             if not auth_user:
-                auth_user = AuthUser(subject=user1, email="admin@gamification-software.com", password="test123", active=True)
+                auth_user = AuthUser(subject=user1, email="admin@gamification-software.com", password="test123",
+                                     active=True)
                 DBSession.add(auth_user)
 
             auth_role = DBSession.query(AuthRole).filter_by(name="Global Admin").first()
@@ -393,8 +405,8 @@ def populate_demo(DBSession):
 
             for perm in yield_all_perms():
                 if not exists_by_expr(t_auth_roles_permissions, and_(
-                    t_auth_roles_permissions.c.auth_role_id == auth_role.id,
-                    t_auth_roles_permissions.c.name == perm[0]
+                        t_auth_roles_permissions.c.auth_role_id == auth_role.id,
+                        t_auth_roles_permissions.c.name == perm[0]
                 )):
                     DBSession.add(AuthRolePermission(role=auth_role, name=perm[0]))
 

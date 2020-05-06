@@ -17,35 +17,41 @@ from pyramid.settings import asbool
 from wtforms import BooleanField
 from wtforms.form import Form
 
-from gengine.app.model import DBSession, Variable, AchievementCategory, Achievement, AchievementProperty, AchievementAchievementProperty, AchievementReward,\
+from gengine.app.model import DBSession, Variable, AchievementCategory, Achievement, AchievementProperty, \
+    AchievementAchievementProperty, AchievementReward, \
     Reward, Subject, Evaluation, Progress, Value, TranslationVariable, Language, Translation, \
-    AuthUser, AuthRole, AuthRolePermission, AchievementTrigger, AchievementTriggerStep, SubjectMessage, Task, TaskExecution, SubjectType
+    AuthUser, AuthRole, AuthRolePermission, AchievementTrigger, AchievementTriggerStep, SubjectMessage, Task, \
+    TaskExecution, SubjectType
 from gengine.app.permissions import yield_all_perms
 from gengine.base.settings import get_settings
 
-adminapp=None
-admin=None
+adminapp = None
+admin = None
+
 
 def resolve_uri(uri):
     from pyramid.path import PkgResourcesAssetDescriptor
-    pkg_name,path=uri.split(":",1)
-    a = PkgResourcesAssetDescriptor(pkg_name,path)
-    absolute = a.abspath() #this is sometimes not absolute :-/
-    absolute = os.path.abspath(absolute) #so we make it absolute
+    pkg_name, path = uri.split(":", 1)
+    a = PkgResourcesAssetDescriptor(pkg_name, path)
+    absolute = a.abspath()  # this is sometimes not absolute :-/
+    absolute = os.path.abspath(absolute)  # so we make it absolute
     return absolute
 
-resole_uri = resolve_uri # there was a typing error once...
 
-def get_static_view(folder,flaskadminapp):
-    folder=resole_uri(folder)
-    
+resole_uri = resolve_uri  # there was a typing error once...
+
+
+def get_static_view(folder, flaskadminapp):
+    folder = resole_uri(folder)
+
     def send_static_file(filename):
         cache_timeout = flaskadminapp.get_send_file_max_age(filename)
         return send_from_directory(folder, filename, cache_timeout=cache_timeout)
-    
+
     return send_static_file
-    
-def init_admin(urlprefix="",secret="fKY7kJ2xSrbPC5yieEjV",override_admin=None,override_flaskadminapp=None):
+
+
+def init_admin(urlprefix="", secret="fKY7kJ2xSrbPC5yieEjV", override_admin=None, override_flaskadminapp=None):
     global adminapp, admin
 
     class TranslationInlineModelForm(InlineFormAdmin):
@@ -69,16 +75,18 @@ def init_admin(urlprefix="",secret="fKY7kJ2xSrbPC5yieEjV",override_admin=None,ov
             super(ModelViewAchievementCategory, self).__init__(AchievementCategory, session, **kwargs)
 
     class ModelViewAchievement(ModelView):
-        column_list = ('name','evaluation','valid_start','valid_end','relevance', 'condition','operator','goal','timespan','priority','achievement')
+        column_list = (
+        'name', 'evaluation', 'valid_start', 'valid_end', 'relevance', 'condition', 'operator', 'goal', 'timespan',
+        'priority', 'achievement')
         column_searchable_list = ('name',)
-        form_excluded_columns = ('rewards','subjects','goals','properties','updated_at', 'properties','triggers')
+        form_excluded_columns = ('rewards', 'subjects', 'goals', 'properties', 'updated_at', 'properties', 'triggers')
         fast_mass_delete = True
 
         def __init__(self, session, **kwargs):
             super(ModelViewAchievement, self).__init__(Achievement, session, **kwargs)
 
     class ModelViewVariable(ModelView):
-        form_excluded_columns =('values',)
+        form_excluded_columns = ('values',)
 
         def __init__(self, session, **kwargs):
             super(ModelViewVariable, self).__init__(Variable, session, **kwargs)
@@ -115,7 +123,7 @@ def init_admin(urlprefix="",secret="fKY7kJ2xSrbPC5yieEjV",override_admin=None,ov
         can_delete = False
 
         # Override displayed fields
-        column_list = ('subject','variable','datetime','key','value')
+        column_list = ('subject', 'variable', 'datetime', 'key', 'value')
 
         fast_mass_delete = True
 
@@ -129,7 +137,7 @@ def init_admin(urlprefix="",secret="fKY7kJ2xSrbPC5yieEjV",override_admin=None,ov
         can_delete = False
 
         # Override displayed fields
-        column_list = ('goal','subject','value','updated_at')
+        column_list = ('goal', 'subject', 'value', 'updated_at')
 
         column_filters = (IntEqualFilter(Subject.id, 'SubjectID'),
                           Achievement.id)
@@ -140,7 +148,7 @@ def init_admin(urlprefix="",secret="fKY7kJ2xSrbPC5yieEjV",override_admin=None,ov
             super(ModelViewProgress, self).__init__(Progress, session, **kwargs)
 
     class ModelViewAchievementProperty(ModelView):
-        column_list = ('id','name')
+        column_list = ('id', 'name')
         form_excluded_columns = ('achievements',)
         fast_mass_delete = True
 
@@ -148,14 +156,14 @@ def init_admin(urlprefix="",secret="fKY7kJ2xSrbPC5yieEjV",override_admin=None,ov
             super(ModelViewAchievementProperty, self).__init__(AchievementProperty, session, **kwargs)
 
     class ModelViewLanguage(ModelView):
-        column_list = ('id','name')
+        column_list = ('id', 'name')
         form_excluded_columns = ('subjects',)
 
         def __init__(self, session, **kwargs):
             super(ModelViewLanguage, self).__init__(Language, session, **kwargs)
 
     class ModelViewReward(ModelView):
-        column_list = ('id','name')
+        column_list = ('id', 'name')
         form_excluded_columns = ('achievements',)
         fast_mass_delete = True
 
@@ -163,7 +171,7 @@ def init_admin(urlprefix="",secret="fKY7kJ2xSrbPC5yieEjV",override_admin=None,ov
             super(ModelViewReward, self).__init__(Reward, session, **kwargs)
 
     class ModelViewSubject(ModelView):
-        column_list = ('id','type','name','lat','lng','timezone','country','region','city','created_at')
+        column_list = ('id', 'type', 'name', 'lat', 'lng', 'timezone', 'country', 'region', 'city', 'created_at')
         form_columns = ('name', 'type', 'timezone', 'language', 'lat', 'lng', 'additional_public_data')
         fast_mass_delete = True
 
@@ -174,7 +182,7 @@ def init_admin(urlprefix="",secret="fKY7kJ2xSrbPC5yieEjV",override_admin=None,ov
         clear_check = BooleanField(label="Delete all caches?")
 
     class MaintenanceView(BaseView):
-        @expose('/',methods=('GET','POST',))
+        @expose('/', methods=('GET', 'POST',))
         def index(self):
             self._template_args['msgs'] = []
             self._template_args['clear_caches_form'] = self.clear_caches_form = ClearCacheForm(request.form)
@@ -195,9 +203,9 @@ def init_admin(urlprefix="",secret="fKY7kJ2xSrbPC5yieEjV",override_admin=None,ov
             super(ModelViewAuthUser, self).__init__(AuthUser, session, **kwargs)
 
     class PermissionInlineModelForm(InlineFormAdmin):
-        form_columns = ('id','name')
+        form_columns = ('id', 'name')
         form_choices = {
-            "name" : sorted(list(yield_all_perms()), key=lambda x: x[1])
+            "name": sorted(list(yield_all_perms()), key=lambda x: x[1])
         }
 
     class ModelViewAuthRole(ModelView):
@@ -208,9 +216,8 @@ def init_admin(urlprefix="",secret="fKY7kJ2xSrbPC5yieEjV",override_admin=None,ov
         def __init__(self, session, **kwargs):
             super(ModelViewAuthRole, self).__init__(AuthRole, session, **kwargs)
 
-
     class ModelViewSubjectMessage(ModelView):
-        column_list = ('subject','text','created_at','is_read')
+        column_list = ('subject', 'text', 'created_at', 'is_read')
         column_details_list = ('subject', 'text', 'created_at', 'is_read', 'params')
         can_edit = False
         can_view_details = True
@@ -225,7 +232,8 @@ def init_admin(urlprefix="",secret="fKY7kJ2xSrbPC5yieEjV",override_admin=None,ov
         can_view_details = True
 
         column_list = ('entry_name', 'task_name', 'config', 'cron')
-        column_details_list = ('id','entry_name', 'task_name', 'config', 'cron', 'is_removed', 'is_auto_created', 'is_manually_modified')
+        column_details_list = (
+        'id', 'entry_name', 'task_name', 'config', 'cron', 'is_removed', 'is_auto_created', 'is_manually_modified')
         form_excluded_columns = ('is_removed', 'is_auto_created', 'is_manually_modified', 'executions')
         form_choices = {'task_name': [
             (x, x) for x in enginetasks.keys()
@@ -263,7 +271,6 @@ def init_admin(urlprefix="",secret="fKY7kJ2xSrbPC5yieEjV",override_admin=None,ov
 
             flash("Executed")
 
-
     class ModelViewTaskExecution(ModelView):
         column_list = ('task.entry_name', 'task.task_name', 'planned_at', 'finished_at', 'success')
         column_details_list = ('id', 'task.entry_name', 'task.task_name', 'planned_at', 'finished_at', 'success', 'log')
@@ -274,7 +281,6 @@ def init_admin(urlprefix="",secret="fKY7kJ2xSrbPC5yieEjV",override_admin=None,ov
         def __init__(self, session, **kwargs):
             super(ModelViewTaskExecution, self).__init__(TaskExecution, session, **kwargs)
 
-
     class ModelViewSubjectType(ModelView):
         column_list = ('id', 'name')
         form_columns = ('name', 'part_of_types')
@@ -283,10 +289,9 @@ def init_admin(urlprefix="",secret="fKY7kJ2xSrbPC5yieEjV",override_admin=None,ov
         def __init__(self, session, **kwargs):
             super(ModelViewSubjectType, self).__init__(SubjectType, session, **kwargs)
 
-
     if not override_flaskadminapp:
         adminapp = Flask(__name__)
-        adminapp.debug=True
+        adminapp.debug = True
         adminapp.secret_key = secret
         adminapp.config.update(dict(
             PREFERRED_URL_SCHEME='https'
@@ -301,38 +306,38 @@ def init_admin(urlprefix="",secret="fKY7kJ2xSrbPC5yieEjV",override_admin=None,ov
     ])
 
     adminapp.jinja_loader = my_loader
-        
+
     adminapp.add_url_rule('/static_gengine/<path:filename>',
                           endpoint='static_gengine',
                           view_func=get_static_view('gengine:app/static', adminapp))
-    
+
     @adminapp.context_processor
     def inject_version():
-        return { "gamification_engine_version" : pkg_resources.get_distribution("gamification-engine").version,
-                 "settings_enable_authentication" : asbool(get_settings().get("enable_user_authentication",False)),
-                 "urlprefix" : get_settings().get("urlprefix","/"),
-                 "jsmain": get_jsmain(),
-                 "cssmain": get_cssmain()
-                 }
-    
+        return {"gamification_engine_version": pkg_resources.get_distribution("gamification-engine").version,
+                "settings_enable_authentication": asbool(get_settings().get("enable_user_authentication", False)),
+                "urlprefix": get_settings().get("urlprefix", "/"),
+                "jsmain": get_jsmain(),
+                "cssmain": get_cssmain()
+                }
+
     if not override_admin:
         admin = Admin(adminapp,
                       name="Gamification Engine - Admin Control Panel",
                       base_template='admin_layout.html',
-                      url=urlprefix+""
+                      url=urlprefix + ""
                       )
     else:
         admin = override_admin
 
-            
     admin.add_view(ModelViewAchievement(DBSession, category="Rules"))
     admin.add_view(ModelViewAchievementTrigger(DBSession, category="Rules"))
 
-    admin.add_view(ModelView(AchievementAchievementProperty, DBSession, category="Rules", name="Achievement Property Values"))
+    admin.add_view(
+        ModelView(AchievementAchievementProperty, DBSession, category="Rules", name="Achievement Property Values"))
     admin.add_view(ModelView(AchievementReward, DBSession, category="Rules", name="Achievement Reward Values"))
     admin.add_view(ModelViewTranslationVariable(DBSession, category="Rules"))
-    admin.add_view(ModelView(Translation,DBSession, category="Rules"))
-    
+    admin.add_view(ModelView(Translation, DBSession, category="Rules"))
+
     admin.add_view(ModelViewAchievementCategory(DBSession, category="Settings"))
     admin.add_view(ModelViewVariable(DBSession, category="Settings"))
     admin.add_view(ModelViewAchievementProperty(DBSession, category="Settings", name="Achievement Property Types"))
@@ -356,7 +361,6 @@ def init_admin(urlprefix="",secret="fKY7kJ2xSrbPC5yieEjV",override_admin=None,ov
     from gengine.app.registries import get_admin_extension_registry
     get_admin_extension_registry().run_extensions(adminapp=adminapp, admin=admin)
 
-
     class GroupAssignmentView(BaseView):
         @expose('/', methods=('GET', 'POST'))
         def index(self):
@@ -369,4 +373,5 @@ def init_admin(urlprefix="",secret="fKY7kJ2xSrbPC5yieEjV",override_admin=None,ov
         def index(self):
             return self.render(template='jscomponent.html', component="LeaderboardCreation")
 
-    admin.add_view(LeaderboardCreationView(name='Create Leaderboards', endpoint='leaderboard_creation', category="Rules"))
+    admin.add_view(
+        LeaderboardCreationView(name='Create Leaderboards', endpoint='leaderboard_creation', category="Rules"))

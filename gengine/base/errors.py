@@ -4,17 +4,20 @@ from pyramid.response import Response
 import json
 from pyramid.renderers import render_to_response
 
+
 class APIError(Exception):
     def __init__(self, code, status, message):
         self.code = code
         self.status = status
         self.message = message
 
+
 class HTMLError(Exception):
     def __init__(self, code, message, description):
         self.code = code
         self.message = message
         self.description = description
+
 
 @view_config(context=APIError)
 def json_exception_view(exc, request):

@@ -4,7 +4,8 @@ from pyramid_dogpile_cache import get_region
 
 force_redis = None
 
-def setup_redis_cache(host,port,db):
+
+def setup_redis_cache(host, port, db):
     """ This is used to override all caching settings in the ini file. Needed for Testing. """
     global force_redis
     force_redis = {
@@ -51,5 +52,5 @@ def create_cache(name):
             warnings.warn("Warning: cache objects are in memory, are you creating docs?")
 
     ch.key_mangler = my_key_mangler(name)
-    
+
     return ch

@@ -2,10 +2,12 @@
 
 force_https = False
 
-def init_reverse_proxy(settings_force_https,settings_prefix):
-    global force_https,prefix
+
+def init_reverse_proxy(settings_force_https, settings_prefix):
+    global force_https, prefix
     force_https = settings_force_https
     prefix = settings_prefix
+
 
 class HTTPSProxied(object):
     def __init__(self, app):
@@ -15,4 +17,3 @@ class HTTPSProxied(object):
         if force_https:
             environ['wsgi.url_scheme'] = "https"
         return self.app(environ, start_response)
-    

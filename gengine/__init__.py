@@ -19,21 +19,22 @@ from sqlalchemy import engine_from_config, create_engine
 
 from gengine.wsgiutil import HTTPSProxied, init_reverse_proxy
 
+
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
     """
-    
-    durl = os.environ.get("DATABASE_URL") #heroku
+
+    durl = os.environ.get("DATABASE_URL")  # heroku
     if durl:
-        settings['sqlalchemy.url']=durl
-        
-    murl = os.environ.get("MEMCACHED_URL") #heroku
+        settings['sqlalchemy.url'] = durl
+
+    murl = os.environ.get("MEMCACHED_URL")  # heroku
     if murl:
-        settings['urlcache_url']=murl
+        settings['urlcache_url'] = murl
 
     set_settings(settings)
 
-    if os.environ.get("DATABASE_URL",None):
+    if os.environ.get("DATABASE_URL", None):
         engine = create_engine(os.environ["DATABASE_URL"], connect_args={"options": "-c timezone=utc"})
     else:
         engine = engine_from_config(settings, 'sqlalchemy.', connect_args={"options": "-c timezone=utc"}, )
@@ -55,7 +56,7 @@ def main(global_config, **settings):
 
     from gengine.app.api.resources import root_factory
     config = Configurator(settings=settings, root_factory=root_factory)
-    config.add_subscriber(reset_context_on_new_request,NewRequest)
+    config.add_subscriber(reset_context_on_new_request, NewRequest)
     config.include('pyramid_dogpile_cache')
     config.include('pyramid_swagger_spec')
 
@@ -64,17 +65,17 @@ def main(global_config, **settings):
     config.include('gengine.app.tasks')
     config.include('gengine.app.jsscripts')
 
-    urlprefix = settings.get("urlprefix","")
-    urlcacheid = settings.get("urlcacheid","gengine")
-    force_https = asbool(settings.get("force_https",False))
+    urlprefix = settings.get("urlprefix", "")
+    urlcacheid = settings.get("urlcacheid", "gengine")
+    force_https = asbool(settings.get("force_https", False))
     init_reverse_proxy(force_https, urlprefix)
 
-    urlcache_url = settings.get("urlcache_url","127.0.0.1:11211")
-    urlcache_active = asbool(os.environ.get("URLCACHE_ACTIVE", settings.get("urlcache_active",True)))
+    urlcache_url = settings.get("urlcache_url", "127.0.0.1:11211")
+    urlcache_active = asbool(os.environ.get("URLCACHE_ACTIVE", settings.get("urlcache_active", True)))
 
-	#auth
+    # auth
     def get_user(request):
-        if not asbool(settings.get("enable_user_authentication",False)):
+        if not asbool(settings.get("enable_user_authentication", False)):
             return None
         token = request.headers.get('X-Auth-Token')
         if (not token) and request.cookies.get("X-Auth-Token"):
@@ -101,10 +102,12 @@ def main(global_config, **settings):
         if not request.user:
             return []
 
-        from gengine.app.model import DBSession, t_auth_tokens, t_auth_users, t_auth_roles, t_auth_roles_permissions, t_auth_users_roles
+        from gengine.app.model import DBSession, t_auth_tokens, t_auth_users, t_auth_roles, t_auth_roles_permissions, \
+            t_auth_users_roles
         from sqlalchemy.sql import select
         j = t_auth_users_roles.join(t_auth_roles).join(t_auth_roles_permissions)
-        q = select([t_auth_roles_permissions.c.name],from_obj=j).where(t_auth_users_roles.c.auth_user_id==request.user.id)
+        q = select([t_auth_roles_permissions.c.name], from_obj=j).where(
+            t_auth_users_roles.c.auth_user_id == request.user.id)
         rows = DBSession.execute(q).fetchall()
         return [r["name"] for r in rows]
 
@@ -119,15 +122,17 @@ def main(global_config, **settings):
     config.add_request_method(get_permissions, 'permissions', reify=True)
     config.add_request_method(has_perm, 'has_perm')
 
-    #routes
+    # routes
     from gengine.app.route import config_routes as config_app_routes
 
     config.include(config_app_routes, route_prefix=urlprefix)
 
-    #date serialization
+    # date serialization
     json_renderer = JSON()
+
     def datetime_adapter(obj, request):
         return obj.isoformat()
+
     json_renderer.add_adapter(datetime.datetime, datetime_adapter)
     config.add_renderer('json', json_renderer)
 

@@ -12,6 +12,7 @@ from pyramid.paster import (
 from pyramid.scripts.common import parse_vars
 from sqlalchemy import engine_from_config
 
+
 def usage(argv):
     cmd = os.path.basename(argv[0])
     print('usage: %s <config_uri> <message> [var=value]\n'
@@ -80,9 +81,10 @@ def revision(settings, message, options):
     )
     alembic_cfg.set_main_option("script_location", script_location)
 
-    command.revision(alembic_cfg,message,True)
+    command.revision(alembic_cfg, message, True)
 
     engine.dispose()
+
 
 if __name__ == '__main__':
     main()
